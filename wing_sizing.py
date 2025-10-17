@@ -654,8 +654,8 @@ def batch_mode():
     print("\nThis will analyze multiple AR and wingspan combinations.")
     
 
-    AR_values = np.arange(5.0, 7.55, 0.05)
-    b_values = np.arange(1.8, 2.65, 0.05)
+    AR_values = np.arange(4.0, 8.05, 0.05)
+    b_values = np.arange(1.4, 2.05, 0.05)
 
     print(f"\nAR values to test: {AR_values}")
     print(f"Wingspan values to test: {b_values} m")

@@ -49,7 +49,7 @@ lower_surface = coords[split_idx:]
 
 # ADJUST THIS VALUE: maximum thickness to add in millimeters
 CHORD = 0.4  # meters
-MAX_THICKNESS_TO_ADD_MM = 15.0  # millimeters - ADJUST THIS VALUE
+MAX_THICKNESS_TO_ADD_MM = 40.0  # millimeters - ADJUST THIS VALUE
 
 # ADJUST THIS VALUE: x-location where maximum thickness is added (0 to 1)
 # Typically around 0.3-0.5 for most airfoils
