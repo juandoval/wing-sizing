@@ -2,43 +2,52 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-def lhs_sampling(ranges, num_samples):
+def lhsSampling_py(q1min, q1max, q2min, q2max, n):
     """
-    generate Latin Hypercube Samples within given ranges
+    LHS sampling for q1:[q1min,q1max], q2:[q2min,q2max]
     
-    parameters:
-    ranges: list of tuples [(min1, max1), (min2, max2), ...] for each dimension
+    Parameters:
+    -----------
+    q1min : float
+        Minimum value for first dimension (q1)
+    q1max : float
+        Maximum value for first dimension (q1)
+    q2min : float
+        Minimum value for second dimension (q2)
+    q2max : float
+        Maximum value for second dimension (q2)
+    n : int
+        Number of samples to generate
     
-            tuples maintain order of the data inserted
-            tuples are immutable (Cant be changed after creation)
-            different types of data can be stored in a tuple (Tho we dont care here)
-            and allow duplicates
-            example: [(0, 1), (10, 20)] for 2D sampling
-    
-    num_samples: number of samples to generate (Remember f tilde, not f, depending on how many samples you have, thats your prediction)
-    
-    returns:
-    numpy array of shape (num_samples, n_dimensions)
-            such that each row represents a sample point in the parameter space
-            example: For 2D sampling with 5 samples, shape will be (5, 2)
-
+    Returns:
+    --------
+    q : numpy array of shape (n, 2)
+        Latin Hypercube Samples where each row is a sample [q1, q2]
+        
+    Example:
+    --------
+    q = lhsSampling_py(1.5, 5.0, 12, 25, 20)
+    # Returns 20 samples with q1 in [1.5, 5.0] and q2 in [12, 25]
     """
-    n_dimensions = len(ranges)
-    print(f"generating {num_samples} LHS in {n_dimensions} dimensions")
+    print(f"Generating {n} LHS samples for q1:[{q1min},{q1max}], q2:[{q2min},{q2max}]")
     
-    #each row is a sample, each column is a dimension (2D for this case)
-    samples = np.zeros((num_samples, n_dimensions))
+    # Initialize array to store samples: n rows (samples), 2 columns (dimensions)
+    q = np.zeros((n, 2))
+    
+    # Define ranges for the two dimensions
+    ranges = [(q1min, q1max), (q2min, q2max)]
+    n_dimensions = 2
     
     for dim in range(n_dimensions):
         """
         generate LHS samples for this dimension
-        so the intervals are divided into num_samples parts, for the normalized [0,1] 
-        range we have num_samples intervals (+1 because we start at 0 btw)
+        so the intervals are divided into n parts, for the normalized [0,1] 
+        range we have n intervals (+1 because we start at 0 btw)
         
         so if n=5 and range is 0-1, intervals are:
         0.0-0.2, 0.2-0.4, 0.4-0.6, 0.6-0.8, 0.8-1.0
         """
-        intervals = np.linspace(0, 1, num_samples + 1)
+        intervals = np.linspace(0, 1, n + 1)
         
         """
         this generates random points within interval created above
@@ -84,9 +93,9 @@ def lhs_sampling(ranges, num_samples):
         10 + 0.37 * (20 - 10) = 13.7
         """
         min_val, max_val = ranges[dim] #range for dimension 1 and for dimension 2
-        samples[:, dim] = min_val + lhs_samples * (max_val - min_val) #all rows (samples), but only column (dimension)
+        q[:, dim] = min_val + lhs_samples * (max_val - min_val) #all rows (samples), but only column (dimension)
     
-    return samples
+    return q
 
 def plot_and_display_samples(samples, ranges, title="Latin Hypercube Sampling (LHS) for Airfoil Parameters"):
     """
@@ -156,12 +165,15 @@ def plot_and_display_samples(samples, ranges, title="Latin Hypercube Sampling (L
 
 
 #user parameters
-x_range = (1.5, 5.0)  #q1 #p belongs [1.5,5]
-y_range = (12, 25)  #q2 #t belongs [12,25]
-num_samples = 20
+q1min = 1.5   #q1 #p belongs [1.5,5]
+q1max = 5.0
+q2min = 12    #q2 #t belongs [12,25]
+q2max = 25
+n = 20
 
-#usage
-ranges = [x_range, y_range]
-lhs_samples = lhs_sampling(ranges, num_samples)
+#usage - call the function with the new signature
+q = lhsSampling_py(q1min, q1max, q2min, q2max, n)
 
-plot_and_display_samples(lhs_samples, ranges)
+# For plotting, we need to create ranges in the old format
+ranges = [(q1min, q1max), (q2min, q2max)]
+plot_and_display_samples(q, ranges)

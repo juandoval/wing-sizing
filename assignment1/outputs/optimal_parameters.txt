@@ -1,0 +1,26 @@
+================================================================================
+NACA AIRFOIL OPTIMIZATION RESULTS
+================================================================================
+
+OPTIMAL PARAMETERS:
+
+(a) MINIMUM CD (Drag Coefficient):
+    p = 1.500000
+    t = 12.000000
+    CD = 0.143225
+    CL = 0.899470
+    CD/CL = 0.159282
+
+(b) MAXIMUM CL (Lift Coefficient):
+    p = 1.500000
+    t = 25.000000
+    CD = 0.207248
+    CL = 0.950052
+    CD/CL = 0.218015
+
+(c) MINIMUM CD/CL (Best Aerodynamic Efficiency):
+    p = 1.500000
+    t = 12.000000
+    CD = 0.143225
+    CL = 0.899470
+    CD/CL = 0.159282
