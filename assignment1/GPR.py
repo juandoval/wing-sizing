@@ -17,9 +17,22 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pandas as pd
 import os
 
-plt.style.use('seaborn-v0_8-darkgrid')
-plt.rcParams['figure.figsize'] = (15, 5)
-plt.rcParams['font.size'] = 10
+# Set professional style for report
+plt.style.use('default')
+plt.rcParams.update({
+    'font.size': 12,
+    'font.family': 'serif',
+    'axes.linewidth': 1.2,
+    'axes.labelsize': 12,
+    'axes.titlesize': 14,
+    'xtick.labelsize': 11,
+    'ytick.labelsize': 11,
+    'legend.fontsize': 11,
+    'figure.facecolor': 'white',
+    'axes.facecolor': 'white',
+    'grid.alpha': 0.3,
+    'grid.linewidth': 0.8
+})
 
 data_file = "doeList.dat"
 
@@ -113,75 +126,170 @@ ratio_std = ratio_std.reshape(n_grid, n_grid)
 
 def plot_contour_pair(p_grid, t_grid, Z_mean, Z_std, training_points, 
                       title_base, filename, vmin_mean=None, vmax_mean=None):
-    """Create side-by-side contour plots for mean and std deviation"""
+    """Create clean side-by-side contour plots for mean and std deviation"""
     
-    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     
-    # Plot mean
+    # Plot mean - consistent blue colormap
     ax = axes[0]
     if vmin_mean is not None and vmax_mean is not None:
-        levels_mean = np.linspace(vmin_mean, vmax_mean, 20)
-        contour_mean = ax.contourf(p_grid, t_grid, Z_mean, levels=levels_mean, cmap='viridis')
+        levels_mean = np.linspace(vmin_mean, vmax_mean, 15)
+        contour_mean = ax.contourf(p_grid, t_grid, Z_mean, levels=levels_mean, 
+                                  cmap='Blues', alpha=0.9)
     else:
-        contour_mean = ax.contourf(p_grid, t_grid, Z_mean, levels=20, cmap='viridis')
+        contour_mean = ax.contourf(p_grid, t_grid, Z_mean, levels=15, 
+                                  cmap='Blues', alpha=0.9)
     
+    # Training points in consistent dark color
     ax.scatter(training_points[:, 0], training_points[:, 1], 
-              c='red', s=50, edgecolors='white', linewidth=1.5, 
-              label='Training points', zorder=5)
-    ax.set_xlabel('p (Location of Max Thickness)', fontsize=12, fontweight='bold')
-    ax.set_ylabel('t (Thickness)', fontsize=12, fontweight='bold')
-    ax.set_title(f'{title_base} - Mean Prediction', fontsize=14, fontweight='bold')
-    ax.legend(loc='upper right')
-    ax.grid(True, alpha=0.3)
+              c='darkred', s=60, edgecolors='white', linewidth=1.5, 
+              label='Training Points', zorder=5, alpha=0.8)
     
+    ax.set_xlabel('p (Location of Max Thickness)')
+    ax.set_ylabel('t (Thickness)')
+    ax.set_title(f'{title_base} - Mean Prediction')
+    ax.legend(loc='upper right', framealpha=0.9)
+    ax.grid(True, alpha=0.3, color='gray', linewidth=0.5)
+    
+    # Clean colorbar
     divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="5%", pad=0.1)
+    cax = divider.append_axes("right", size="4%", pad=0.1)
     cbar = plt.colorbar(contour_mean, cax=cax)
-    cbar.set_label(title_base, fontsize=11, fontweight='bold')
+    cbar.set_label(title_base, fontsize=11)
     
-    # Plot standard deviation
+    # Plot standard deviation - consistent gray colormap
     ax = axes[1]
-    contour_std = ax.contourf(p_grid, t_grid, Z_std, levels=20, cmap='Reds')
+    contour_std = ax.contourf(p_grid, t_grid, Z_std, levels=15, 
+                             cmap='Greys', alpha=0.9)
+    
     ax.scatter(training_points[:, 0], training_points[:, 1], 
-              c='blue', s=50, edgecolors='white', linewidth=1.5, 
-              label='Training points', zorder=5)
-    ax.set_xlabel('p (Location of Max Thickness)', fontsize=12, fontweight='bold')
-    ax.set_ylabel('t (Thickness)', fontsize=12, fontweight='bold')
-    ax.set_title(f'{title_base} - Prediction Uncertainty (Std Dev)', fontsize=14, fontweight='bold')
-    ax.legend(loc='upper right')
-    ax.grid(True, alpha=0.3)
+              c='darkred', s=60, edgecolors='white', linewidth=1.5, 
+              label='Training Points', zorder=5, alpha=0.8)
+    
+    ax.set_xlabel('p (Location of Max Thickness)')
+    ax.set_ylabel('t (Thickness)')
+    ax.set_title(f'{title_base} - Uncertainty (Std Dev)')
+    ax.legend(loc='upper right', framealpha=0.9)
+    ax.grid(True, alpha=0.3, color='gray', linewidth=0.5)
     
     divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="5%", pad=0.1)
+    cax = divider.append_axes("right", size="4%", pad=0.1)
     cbar = plt.colorbar(contour_std, cax=cax)
-    cbar.set_label('Standard Deviation', fontsize=11, fontweight='bold')
+    cbar.set_label('Standard Deviation', fontsize=11)
     
     plt.tight_layout()
-    plt.savefig(filename, dpi=300, bbox_inches='tight')
+    plt.savefig(filename, dpi=300, bbox_inches='tight', facecolor='white')
     print(f"  Saved: {filename}")
     
     return fig
 
+def plot_contour_pair_with_optima(p_grid, t_grid, Z_mean, Z_std, training_points, 
+                                 title_base, filename, optimal_points, vmin_mean=None, vmax_mean=None):
+    """Create clean side-by-side contour plots with optimal points marked"""
+    
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    
+    # Plot mean - consistent blue colormap
+    ax = axes[0]
+    if vmin_mean is not None and vmax_mean is not None:
+        levels_mean = np.linspace(vmin_mean, vmax_mean, 15)
+        contour_mean = ax.contourf(p_grid, t_grid, Z_mean, levels=levels_mean, 
+                                  cmap='Blues', alpha=0.9)
+    else:
+        contour_mean = ax.contourf(p_grid, t_grid, Z_mean, levels=15, 
+                                  cmap='Blues', alpha=0.9)
+    
+    # Training points
+    ax.scatter(training_points[:, 0], training_points[:, 1], 
+              c='gray', s=60, edgecolors='white', linewidth=1.5, 
+              label='Training Points', zorder=4, alpha=0.8)
+    
+    # Add optimal points
+    for p_opt, t_opt, label, color in optimal_points:
+        ax.scatter(p_opt, t_opt, c=color, s=200, marker='*', 
+                  edgecolors='white', linewidth=2, label=label, zorder=6, alpha=0.9)
+    
+    ax.set_xlabel('p (Location of Max Thickness)')
+    ax.set_ylabel('t (Thickness)')
+    ax.set_title(f'{title_base} - Mean Prediction')
+    ax.legend(loc='upper right', framealpha=0.9)
+    ax.grid(True, alpha=0.3, color='gray', linewidth=0.5)
+    
+    # Clean colorbar
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="4%", pad=0.1)
+    cbar = plt.colorbar(contour_mean, cax=cax)
+    cbar.set_label(title_base, fontsize=11)
+    
+    # Plot standard deviation - consistent gray colormap
+    ax = axes[1]
+    contour_std = ax.contourf(p_grid, t_grid, Z_std, levels=15, 
+                             cmap='Greys', alpha=0.9)
+    
+    ax.scatter(training_points[:, 0], training_points[:, 1], 
+              c='darkred', s=60, edgecolors='white', linewidth=1.5, 
+              label='Training Points', zorder=4, alpha=0.8)
+    
+    # Add optimal points to std plot as well
+    for p_opt, t_opt, label, color in optimal_points:
+        ax.scatter(p_opt, t_opt, c=color, s=200, marker='*', 
+                  edgecolors='white', linewidth=2, label=label, zorder=6, alpha=0.9)
+    
+    ax.set_xlabel('p (Location of Max Thickness)')
+    ax.set_ylabel('t (Thickness)')
+    ax.set_title(f'{title_base} - Uncertainty (Std Dev)')
+    ax.legend(loc='upper right', framealpha=0.9)
+    ax.grid(True, alpha=0.3, color='gray', linewidth=0.5)
+    
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="4%", pad=0.1)
+    cbar = plt.colorbar(contour_std, cax=cax)
+    cbar.set_label('Standard Deviation', fontsize=11)
+    
+    plt.tight_layout()
+    plt.savefig(filename, dpi=300, bbox_inches='tight', facecolor='white')
+    print(f"  Saved: {filename}")
+    
+    return fig
+
+# OPTIMIZATION: FIND OPTIMAL PARAMETERS (need to calculate before plotting)
+
+print("\n" + "=" * 80)
+print("Finding Optimal Parameters for Plotting...")
+print("=" * 80)
+
+# Find optimal points
+idx_min_Cd = np.argmin(Cd_mean)
+idx_max_Cl = np.argmax(Cl_mean)
+idx_min_ratio = np.argmin(ratio_mean)
+
+p_opt_minCd, t_opt_minCd = X_grid[idx_min_Cd]
+p_opt_maxCl, t_opt_maxCl = X_grid[idx_max_Cl]
+p_opt_minRatio, t_opt_minRatio = X_grid[idx_min_ratio]
+
 # Generate Plots
 
 print("\n" + "=" * 80)
-print("Generating Contour Plots...")
+print("Generating Contour Plots with Optimal Points...")
 print("=" * 80)
 
-# CD plots
-fig1 = plot_contour_pair(p_grid, t_grid, Cd_mean, Cd_std, X, 
-                         'CD (Drag Coefficient)', 
-                         os.path.join(OUTPUT_DIR, 'CD_contours.png'))
+# CD plots with optimal points
+fig1 = plot_contour_pair_with_optima(p_grid, t_grid, Cd_mean, Cd_std, X,
+                                    'CD (Drag Coefficient)', 
+                                    os.path.join(OUTPUT_DIR, 'CD_contours.png'),
+                                    [(p_opt_minCd, t_opt_minCd, 'Min CD', 'darkred')])
 
-# CL plots
-fig2 = plot_contour_pair(p_grid, t_grid, Cl_mean, Cl_std, X, 
-                         'CL (Lift Coefficient)', 
-                         os.path.join(OUTPUT_DIR, 'CL_contours.png'))
+# CL plots with optimal points  
+fig2 = plot_contour_pair_with_optima(p_grid, t_grid, Cl_mean, Cl_std, X,
+                                    'CL (Lift Coefficient)', 
+                                    os.path.join(OUTPUT_DIR, 'CL_contours.png'),
+                                    [(p_opt_maxCl, t_opt_maxCl, 'Max CL', 'darkblue')])
 
-# CD/CL plots
-fig3 = plot_contour_pair(p_grid, t_grid, ratio_mean, ratio_std, X, 
-                         'CD/CL (Drag-to-Lift Ratio)', 
-                         os.path.join(OUTPUT_DIR, 'CD_CL_ratio_contours.png'))
+# CD/CL plots with optimal points
+fig3 = plot_contour_pair_with_optima(p_grid, t_grid, ratio_mean, ratio_std, X,
+                                    'CD/CL (Drag-to-Lift Ratio)', 
+                                    os.path.join(OUTPUT_DIR, 'CD_CL_ratio_contours.png'),
+                                    [(p_opt_minRatio, t_opt_minRatio, 'Min CD/CL', 'darkgreen')])
 
 # ANALYSIS: HOW QoIs VARY WITH p AND t
 
@@ -207,20 +315,10 @@ print("   - Minimum CD/CL (best efficiency) occurs at moderate thickness")
 print("   - Both p and t affect the ratio, showing a trade-off between drag and lift")
 print(f"   - Range on grid: [{ratio_mean.min():.4f}, {ratio_mean.max():.4f}]")
 
-# OPTIMIZATION: FIND OPTIMAL PARAMETERS
-
+# Print detailed optimization results
 print("\n" + "=" * 80)
-print("OPTIMIZATION: Finding Optimal Parameters")
+print("OPTIMIZATION: Detailed Results")
 print("=" * 80)
-
-# Find optimal points
-idx_min_Cd = np.argmin(Cd_mean)
-idx_max_Cl = np.argmax(Cl_mean)
-idx_min_ratio = np.argmin(ratio_mean)
-
-p_opt_minCd, t_opt_minCd = X_grid[idx_min_Cd]
-p_opt_maxCl, t_opt_maxCl = X_grid[idx_max_Cl]
-p_opt_minRatio, t_opt_minRatio = X_grid[idx_min_ratio]
 
 print("\n(a) MINIMUM CD (Drag Coefficient):")
 print(f"    Optimal p = {p_opt_minCd:.4f}")
@@ -285,52 +383,59 @@ print("\n" + "=" * 80)
 print("Creating Comprehensive Visualization...")
 print("=" * 80)
 
-fig, axes = plt.subplots(2, 3, figsize=(20, 12))
+fig, axes = plt.subplots(2, 3, figsize=(18, 10))
 
+# Consistent color scheme for all plots
 qois = [
-    (Cd_mean, Cd_std, 'CD', 'viridis'),
-    (Cl_mean, Cl_std, 'CL', 'plasma'),
-    (ratio_mean, ratio_std, 'CD/CL', 'coolwarm')
+    (Cd_mean, Cd_std, 'CD', 'Blues'),
+    (Cl_mean, Cl_std, 'CL', 'Blues'),
+    (ratio_mean, ratio_std, 'CD/CL', 'Blues')
 ]
 
+# Clean optimal points with consistent colors
 optimal_points = {
-    'Min CD': (p_opt_minCd, t_opt_minCd, 'red', 'o'),
-    'Max CL': (p_opt_maxCl, t_opt_maxCl, 'blue', 's'),
-    'Min CD/CL': (p_opt_minRatio, t_opt_minRatio, 'green', '^')
+    'Min CD': (p_opt_minCd, t_opt_minCd, 'darkred', 'o'),
+    'Max CL': (p_opt_maxCl, t_opt_maxCl, 'darkblue', 's'),
+    'Min CD/CL': (p_opt_minRatio, t_opt_minRatio, 'darkgreen', '^')
 }
 
 for idx, (mean_data, std_data, name, cmap) in enumerate(qois):
     # Mean plot
     ax = axes[0, idx]
-    contour = ax.contourf(p_grid, t_grid, mean_data, levels=20, cmap=cmap)
-    ax.scatter(X[:, 0], X[:, 1], c='white', s=30, edgecolors='black', 
-              linewidth=1, label='Training', alpha=0.7, zorder=4)
+    contour = ax.contourf(p_grid, t_grid, mean_data, levels=15, cmap=cmap, alpha=0.9)
+    ax.scatter(X[:, 0], X[:, 1], c='gray', s=40, edgecolors='white', 
+              linewidth=1.2, label='Training Points', alpha=0.8, zorder=4)
     
     for opt_name, (p_opt, t_opt, color, marker) in optimal_points.items():
-        ax.scatter(p_opt, t_opt, c=color, s=200, marker=marker, 
-                  edgecolors='white', linewidth=2, label=opt_name, zorder=5)
+        ax.scatter(p_opt, t_opt, c=color, s=150, marker=marker, 
+                  edgecolors='white', linewidth=2, label=opt_name, zorder=5, alpha=0.9)
     
-    ax.set_xlabel('p (Location of Max Thickness)', fontweight='bold')
-    ax.set_ylabel('t (Thickness)', fontweight='bold')
-    ax.set_title(f'{name} - Mean', fontsize=13, fontweight='bold')
+    ax.set_xlabel('p (Location of Max Thickness)')
+    ax.set_ylabel('t (Thickness)')
+    ax.set_title(f'{name} - Mean Prediction')
     if idx == 2:
-        ax.legend(loc='upper left', fontsize=9)
-    ax.grid(True, alpha=0.3)
-    plt.colorbar(contour, ax=ax, label=name)
+        ax.legend(loc='upper left', fontsize=9, framealpha=0.9)
+    ax.grid(True, alpha=0.3, color='gray', linewidth=0.5)
     
-    # Std plot
+    cbar = plt.colorbar(contour, ax=ax, label=name)
+    cbar.ax.tick_params(labelsize=10)
+    
+    # Std plot - consistent gray colormap
     ax = axes[1, idx]
-    contour = ax.contourf(p_grid, t_grid, std_data, levels=20, cmap='Reds')
-    ax.scatter(X[:, 0], X[:, 1], c='white', s=30, edgecolors='black', 
-              linewidth=1, alpha=0.7, zorder=4)
-    ax.set_xlabel('p (Location of Max Thickness)', fontweight='bold')
-    ax.set_ylabel('t (Thickness)', fontweight='bold')
-    ax.set_title(f'{name} - Std Dev', fontsize=13, fontweight='bold')
-    ax.grid(True, alpha=0.3)
-    plt.colorbar(contour, ax=ax, label='Std Dev')
+    contour = ax.contourf(p_grid, t_grid, std_data, levels=15, cmap='Greys', alpha=0.9)
+    ax.scatter(X[:, 0], X[:, 1], c='darkred', s=40, edgecolors='white', 
+              linewidth=1.2, alpha=0.8, zorder=4)
+    ax.set_xlabel('p (Location of Max Thickness)')
+    ax.set_ylabel('t (Thickness)')
+    ax.set_title(f'{name} - Uncertainty (Std Dev)')
+    ax.grid(True, alpha=0.3, color='gray', linewidth=0.5)
+    
+    cbar = plt.colorbar(contour, ax=ax, label='Std Dev')
+    cbar.ax.tick_params(labelsize=10)
 
 plt.tight_layout()
-plt.savefig(os.path.join(OUTPUT_DIR, 'comprehensive_analysis.png'), dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(OUTPUT_DIR, 'comprehensive_analysis.png'), dpi=300, 
+           bbox_inches='tight', facecolor='white')
 print("  Saved: comprehensive_analysis.png")
 
 # ============================================================================
