@@ -10,14 +10,12 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C, WhiteKernel
 import os
 
-# Create outputs directory if it doesn't exist
 OUTPUT_DIR = 'outputs'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pandas as pd
 import os
 
-# Set professional style for report
 plt.style.use('default')
 plt.rcParams.update({
     'font.size': 12,
@@ -53,15 +51,14 @@ y_ratio = y_Cd / y_Cl       # q3: Cd/Cl ratio
 
 print("\n" + "=" * 80)
 print("Design Space Ranges:")
-print(f"  p (location of max thickness): [{X[:, 0].min():.3f}, {X[:, 0].max():.3f}]") #[1.5, 5.0] #[{X[:, 0].min():.3f}, {X[:, 0].max():.3f}]
-print(f"  t (thickness):                 [{X[:, 1].min():.3f}, {X[:, 1].max():.3f}]") #[12.0, 25.0] #[{X[:, 1].min():.3f}, {X[:, 1].max():.3f}]
+print(f"  p (location of max thickness): [{X[:, 0].min():.3f}, {X[:, 0].max():.3f}]") 
+print(f"  t (thickness):                 [{X[:, 1].min():.3f}, {X[:, 1].max():.3f}]")
 print("\nQoI Ranges:")
 print(f"  Cd (drag coefficient):         [{y_Cd.min():.4f}, {y_Cd.max():.4f}]")
 print(f"  Cl (lift coefficient):         [{y_Cl.min():.4f}, {y_Cl.max():.4f}]")
 print(f"  Cd/Cl (drag-to-lift ratio):    [{y_ratio.min():.4f}, {y_ratio.max():.4f}]")
 
 # Gaussian Process Regression
-
 '''
 Define the kernel as a combination of Constant, RBF, and WhiteKernel components:
 
@@ -72,55 +69,56 @@ and WhiteKernel(noise_level=1e-5) is the white noise kernel with a fixed noise l
 '''
 kernel = C(1.0, (1e-3, 1e3)) * RBF([1.0, 1.0], (1e-2, 1e2)) + WhiteKernel(noise_level=1e-5)
 
-
 # Train GPR models for each QoI
 print("\n" + "=" * 80)
 print("Training Gaussian Process Regressors...")
 print("=" * 80)
 
-gpr_Cd = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=10, random_state=42)
-gpr_Cd.fit(X, y_Cd)
+for n_restarts in [5, 10, 20, 30]:
 
-gpr_Cl = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=10, random_state=42)
-gpr_Cl.fit(X, y_Cl)
+    gpr_Cd = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=n_restarts, random_state=42)
+    gpr_Cd.fit(X, y_Cd)
 
-gpr_ratio = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=10, random_state=42)
-gpr_ratio.fit(X, y_ratio)
+    gpr_Cl = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=n_restarts, random_state=42)
+    gpr_Cl.fit(X, y_Cl)
+
+    gpr_ratio = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=n_restarts, random_state=42)
+    gpr_ratio.fit(X, y_ratio)
 
 
-print("\nGPR Model for Cd:")
-print(f"  Kernel: {gpr_Cd.kernel_}")
-print(f"  Log-likelihood: {gpr_Cd.log_marginal_likelihood_value_:.3f}")
+    print("\nGPR Model for Cd:")
+    print(f"  Kernel: {gpr_Cd.kernel_}")
+    print(f"  Log-likelihood with {n_restarts} restarts: {gpr_Cd.log_marginal_likelihood_value_:.3f}")
 
-print("\nGPR Model for Cl:")
-print(f"  Kernel: {gpr_Cl.kernel_}")
-print(f"  Log-likelihood: {gpr_Cl.log_marginal_likelihood_value_:.3f}")
+    print("\nGPR Model for Cl:")
+    print(f"  Kernel: {gpr_Cl.kernel_}")
+    print(f"  Log-likelihood with {n_restarts} restarts: {gpr_Cl.log_marginal_likelihood_value_:.3f}")
 
-print("\nGPR Model for Cd/Cl:")
-print(f"  Kernel: {gpr_ratio.kernel_}")
-print(f"  Log-likelihood: {gpr_ratio.log_marginal_likelihood_value_:.3f}")
+    print("\nGPR Model for Cd/Cl:")
+    print(f"  Kernel: {gpr_ratio.kernel_}")
+    print(f"  Log-likelihood with {n_restarts} restarts: {gpr_ratio.log_marginal_likelihood_value_:.3f}")
 
-# Grid
+    # Grid
 
-# Design space: p in [1.5, 5.0], t in [12, 25]
-n_grid = 1000 # The more the better but slower
-p_range = np.linspace(1.5, 5.0, n_grid)
-t_range = np.linspace(12, 25, n_grid)
-p_grid, t_grid = np.meshgrid(p_range, t_range)
-X_grid = np.column_stack([p_grid.ravel(), t_grid.ravel()])
+    # Design space: p in [1.5, 5.0], t in [12, 25]
+    n_grid = 1000 # The more the better but slower
+    p_range = np.linspace(1.5, 5.0, n_grid)
+    t_range = np.linspace(12, 25, n_grid)
+    p_grid, t_grid = np.meshgrid(p_range, t_range)
+    X_grid = np.column_stack([p_grid.ravel(), t_grid.ravel()])
 
-# Make predictions
-Cd_mean, Cd_std = gpr_Cd.predict(X_grid, return_std=True)
-Cl_mean, Cl_std = gpr_Cl.predict(X_grid, return_std=True)
-ratio_mean, ratio_std = gpr_ratio.predict(X_grid, return_std=True)
+    # Make predictions
+    Cd_mean, Cd_std = gpr_Cd.predict(X_grid, return_std=True)
+    Cl_mean, Cl_std = gpr_Cl.predict(X_grid, return_std=True)
+    ratio_mean, ratio_std = gpr_ratio.predict(X_grid, return_std=True)
 
-# Reshape for plotting
-Cd_mean = Cd_mean.reshape(n_grid, n_grid)
-Cd_std = Cd_std.reshape(n_grid, n_grid)
-Cl_mean = Cl_mean.reshape(n_grid, n_grid)
-Cl_std = Cl_std.reshape(n_grid, n_grid)
-ratio_mean = ratio_mean.reshape(n_grid, n_grid)
-ratio_std = ratio_std.reshape(n_grid, n_grid)
+    # Reshape for plotting
+    Cd_mean = Cd_mean.reshape(n_grid, n_grid)
+    Cd_std = Cd_std.reshape(n_grid, n_grid)
+    Cl_mean = Cl_mean.reshape(n_grid, n_grid)
+    Cl_std = Cl_std.reshape(n_grid, n_grid)
+    ratio_mean = ratio_mean.reshape(n_grid, n_grid)
+    ratio_std = ratio_std.reshape(n_grid, n_grid)
 
 # Plotting function
 
