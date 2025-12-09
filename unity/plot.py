@@ -4,11 +4,17 @@ import matplotlib.pyplot as plt
 
 # ============== CHANGE THESE ==============
 # Add your files here - each entry is (filename, label)
-FILES = [
+# Files for all plots (Cl, Cd, Cm)
+FILES_ALL = [
     # ('unity\\data_12.txt', '12 m/s'),
     # ('unity\\data_14.txt', '14 m/s'),
     ('unity\\data_good_2.txt', '16 m/s'),
-    # Add more files as needed:
+]
+
+# Files ONLY for Cm vs Cl plot (elevator deflection data)
+FILES_CM_ONLY = [
+    ('unity\\Cm_Cl_10deg_v2.txt', '10 deg'),
+    ('unity\\Cm_Cl_min10deg.txt', '-10 deg')
 ]
 
 OUTPUT_FILE = 'aero_plots.png'
@@ -37,7 +43,8 @@ COLORS = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple',
 # Create 4 subplots: Cl vs AoA, Cd vs AoA, Cl vs Cd, Cm vs Cl
 fig, axes = plt.subplots(2, 2, figsize=(15, 10))
 
-for i, (data_file, label) in enumerate(FILES):
+# Process files for all plots
+for i, (data_file, label) in enumerate(FILES_ALL):
     try:
         # Read data file
         df = pd.read_csv(data_file, sep='\t')
@@ -91,10 +98,53 @@ for i, (data_file, label) in enumerate(FILES):
         # Plot 3: Cl vs Cd (bottom-left)
         axes[1,0].scatter(Cd, Cl, alpha=0.7, s=30, c=color, label=label)
         
-        # Plot 4: Cm vs Cl (bottom-right) - filtered to remove outliers
-        axes[1,1].scatter(Cl_filtered, Cm_filtered, alpha=0.7, s=30, c=color, label=label)
+        # Don't plot FILES_ALL in Cm vs Cl (bottom-right) - only FILES_CM_ONLY will be plotted there
         
-        print(f"{label}: {len(aoa)} data points")
+        print(f"{label}: {len(aoa)} data points, Cm range: [{Cm.min():.4f}, {Cm.max():.4f}]")
+        
+    except FileNotFoundError as e:
+        print(f"Warning: {e}, skipping...")
+    except Exception as e:
+        print(f"Error processing {label}: {e}")
+
+# Process files for Cm plot only (elevator deflection data)
+for i, (data_file, label) in enumerate(FILES_CM_ONLY):
+    try:
+        df = pd.read_csv(data_file, sep='\t')
+        df.columns = df.columns.str.strip()
+        
+        aoa = df[AOA_COLUMN].values
+        F_Y = df[LIFT_COLUMN].values
+        F_Z = df[DRAG_COLUMN].values
+        M_Y = df[MOMENT_COLUMN].values
+        
+        alpha_rad = np.deg2rad(aoa)
+        lift = F_Y * np.cos(alpha_rad) - F_Z * np.sin(alpha_rad)
+        moment = M_Y
+        
+        if 'Aircraft Simulation Airspeed' in df.columns:
+            V = df['Aircraft Simulation Airspeed'].values
+        else:
+            V_val = float(label.split()[0])
+            V = np.full_like(aoa, V_val)
+        
+        q = 0.5 * RHO * V**2
+        Cl = lift / (q * S)
+        Cm = moment / (q * S * CHORD)
+        
+        # Debug: print raw values
+        print(f"\n{label} DEBUG:")
+        print(f"  Raw moment range: [{moment.min():.4f}, {moment.max():.4f}] N·m")
+        print(f"  q*S*CHORD = {(q[0] * S * CHORD):.2f}")
+        print(f"  Cm range: [{Cm.min():.6f}, {Cm.max():.6f}]")
+        
+        # Don't filter for elevator data - we want to see the actual range
+        color = COLORS[(i + len(FILES_ALL)) % len(COLORS)]
+        
+        # Only plot in Cm vs Cl (bottom-right)
+        axes[1,1].scatter(Cl, Cm, alpha=0.7, s=30, c=color, label=label)
+        
+        print(f"{label} (Cm only): {len(aoa)} data points")
         
     except FileNotFoundError as e:
         print(f"Warning: {e}, skipping...")

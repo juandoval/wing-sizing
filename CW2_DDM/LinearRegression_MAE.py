@@ -74,7 +74,7 @@ def compute_mae_gradient(X, y, w):
     
     return gradient
 
-def gradient_descent_mae(X, y, learning_rate=0.01, num_iterations=1000):
+def gd_mae(X, y, learning_rate=0.01, num_iterations=1000):
     """
     Train linear regression using Gradient Descent with MAE loss.
     
@@ -204,9 +204,9 @@ if __name__ == "__main__":
     stds[stds == 0] = 1 
     X_normalized[:, 1:] = (X[:, 1:] - means) / stds
     
-    print("\nTraining with Gradient Descent (MAE Loss):")
+    print("\nTraining w/ Gradient Descent (MAE Loss):")
     
-    w_mae, loss_history_mae = gradient_descent_mae(
+    w_mae, loss_history_mae = gd_mae(
         X_normalized, y,
         learning_rate=50.0, 
         num_iterations=5000
