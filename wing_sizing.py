@@ -654,8 +654,8 @@ def batch_mode():
     print("\nThis will analyze multiple AR and wingspan combinations.")
     
 
-    AR_values = np.arange(4.0, 8.05, 0.05)
-    b_values = np.arange(1.4, 2.05, 0.05)
+    AR_values = np.arange(4.0, 6.0, 0.05)
+    b_values = np.arange(1.6, 1.90, 0.05)
 
     print(f"\nAR values to test: {AR_values}")
     print(f"Wingspan values to test: {b_values} m")
@@ -666,14 +666,14 @@ def batch_mode():
         return
     
     print_header("COMMON PARAMETERS")
-    MTOW = get_float_input("MTOW [kg]", 6.0)
-    Cl_max = get_float_input("Cl,max", 1.52)
-    Cd0 = get_float_input("CD,0", 0.016)
-    e = get_float_input("Oswald e", 0.7)
-    vstall_max = get_float_input("Max Vstall [m/s]", 8.7)
-    span_max = get_float_input("Max wingspan [m]", 2.7)
+    MTOW = get_float_input("MTOW [kg]", 5.5)
+    Cl_max = get_float_input("Cl,max", 1.45)
+    Cd0 = get_float_input("CD,0", 0.0)
+    e = get_float_input("Oswald e", 0.9)
+    vstall_max = get_float_input("Max Vstall [m/s]", 9.0)
+    span_max = get_float_input("Max wingspan [m]", 1.9)
     power_max = get_float_input("Max power [W]", 400.0)
-    target_cruise = get_float_input("Target cruise speed [m/s]", 25.0)
+    target_cruise = get_float_input("Target cruise speed [m/s]", 20)
     
     print_header("BATTERY CONFIGURATION")
     print("\nLiPo Battery Specifications:")
