@@ -1,7 +1,7 @@
 # Linear Regression using Mean Absolute Error (MAE) Loss
 # AERO40041 Coursework 2 - Task 2
 #
-# This submission was prepared by Juan Ignacio Doval Roque [10752534] and Sacha Muller [10873681].
+# This file was prepared by Juan Ignacio Doval Roque [10752534]
 #
 # NOTE: Plots have been hard coded for given data (Qdot vs dT), therefore, if other data is used,
 # the plotting section may need to be adjusted accordingly. Also the path to the data file should be changed.
@@ -10,9 +10,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-your_path = 'CW2_DDM/'
+your_path = 'LinearRegression/'
+data_file = "window_heat.csv"
+y_label = '$\dot{Q}$ (W)'
+x_label = 'ΔT (°C)'
 
-def load_and_prepare_data(filename):
+def load_and_prep_data(filename):
     """
     Load dataset from CSV and prepare feature matrix X and target vector y.
     Adds a column of ones to X for the bias term.
@@ -27,7 +30,7 @@ def load_and_prepare_data(filename):
     
     return X, y
 
-def compute_mae_loss(X, y, w):
+def mae_loss(X, y, w):
     """
     Compute Mean Absolute Error loss.
     
@@ -41,17 +44,7 @@ def compute_mae_loss(X, y, w):
     loss = (1/N) * np.sum(np.abs(error))
     return loss
 
-def compute_mse_loss(X, y, w):
-    """
-    Compute Mean Squared Error loss (for comparison).
-    """
-    N = X.shape[0]
-    y_pred = X @ w
-    error = y_pred - y
-    loss = (1/N) * np.sum(error ** 2)
-    return loss
-
-def compute_mae_gradient(X, y, w):
+def mae_gradient(X, y, w):
     """
     Compute the gradient of MAE loss with respect to weights.
     
@@ -109,11 +102,11 @@ def gd_mae(X, y, learning_rate=0.01, num_iterations=1000):
     no_improve = 0
     
     for iteration in range(num_iterations):
-        gradient = compute_mae_gradient(X, y, w)
+        gradient = mae_gradient(X, y, w)
         
         w = w - learning_rate * gradient
         
-        current_loss = compute_mae_loss(X, y, w)
+        current_loss = mae_loss(X, y, w)
         loss_history.append(current_loss)
         
         if current_loss < best_loss - 1e-6:
@@ -131,71 +124,18 @@ def gd_mae(X, y, learning_rate=0.01, num_iterations=1000):
     
     return w, loss_history
 
-def sgd_mae(X, y, learning_rate=0.01, num_epochs=100, seed=42):
-    """
-    Train linear regression using Stochastic Gradient Descent with MAE loss.
-    
-    Parameters:
-    -----------
-    X : numpy array of shape (N, D+1)
-        Feature matrix with bias column
-    y : numpy array of shape (N, 1)
-        Target values
-    learning_rate : float
-        Step size for gradient updates
-    num_epochs : int
-        Number of complete passes through the dataset
-    seed : int
-        Random seed for reproducibility
-        
-    Returns:
-    --------
-    w : numpy array
-        Learned weights
-    loss_history : list
-        MAE loss value recorded at end of each epoch
-    """
-    np.random.seed(seed)
-    
-    N, D = X.shape
-    w = np.zeros((D, 1))
-    
-    loss_history = []
-    
-    for epoch in range(num_epochs):
-        indices = np.random.permutation(N)
-        
-        for i in indices:
-            xi = X[i:i+1, :]
-            yi = y[i:i+1, :]
-            
-            y_pred = xi @ w
-            error = y_pred - yi
-            
-            gradient = xi.T * np.sign(error)
-            
-            w = w - learning_rate * gradient
-        
-        current_loss = compute_mae_loss(X, y, w)
-        loss_history.append(current_loss)
-        
-        if (epoch + 1) % 10 == 0 or epoch == 0:
-            print(f"Epoch {epoch + 1}/{num_epochs}, MAE Loss: {current_loss:.6f}")
-    
-    return w, loss_history
-
 def predict(X, w):
     """Make predictions using learned weights."""
     return X @ w
 
 if __name__ == "__main__":
-    X, y = load_and_prepare_data(your_path + "window_heat.csv")
+    X, y = load_and_prep_data(your_path + data_file)
     
     dT_original = X[:, 1].copy()
     
     print("DATA CHECK:")
     print(f"dT range: {dT_original.min():.2f} to {dT_original.max():.2f} °C")
-    print(f"Qdot range: {y.min():.2f} to {y.max():.2f} W")
+    print(f"{y_label} range: {y.min():.2f} to {y.max():.2f} W")
     print(f"Dataset shape: {X.shape[0]} samples, {X.shape[1]-1} features")
     
     X_normalized = X.copy()
@@ -219,10 +159,12 @@ if __name__ == "__main__":
     
     final_mae = np.mean(np.abs(y - y_pred_mae))
     final_mse = np.mean((y - y_pred_mae) ** 2)
+    final_rmse = np.sqrt(final_mse)
     print(f"\nFinal MAE: {final_mae:.6f}")
     print(f"Final MSE: {final_mse:.6f}")
+    print(f"Final RMSE: {final_rmse:.6f}")
     
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    fig, axes = plt.subplots(3, 1, figsize=(8, 12))
     
     # Plot 1: Loss vs Iteration
     axes[0].plot(range(1, len(loss_history_mae) + 1), loss_history_mae, 'b-', linewidth=2)
@@ -240,20 +182,21 @@ if __name__ == "__main__":
     y_line = X_line @ w_mae
     
     axes[1].plot(dT_line, y_line, 'r-', linewidth=2, label='Fitted line (MAE)')
-    axes[1].set_xlabel('ΔT (°C)', fontsize=12)
-    axes[1].set_ylabel('$\dot{Q}$ (W)', fontsize=12)
+    axes[1].set_xlabel(x_label, fontsize=12)
+    axes[1].set_ylabel(y_label, fontsize=12)
     axes[1].set_title('Heat Loss vs Temperature Difference', fontsize=14)
     axes[1].legend()
     axes[1].grid(True, alpha=0.3)
     
     # Plot 3: Predictions vs Actual
-    axes[2].scatter(y, y_pred_mae, alpha=0.6, edgecolors='black', linewidth=0.5)
+    axes[2].scatter(y, y_pred_mae, alpha=0.6, edgecolors='black',
+                    linewidth=0.5, label='Training data points', color='blue')
     min_val = min(y.min(), y_pred_mae.min())
     max_val = max(y.max(), y_pred_mae.max())
     axes[2].plot([min_val, max_val], [min_val, max_val], 'r--', 
-                 linewidth=2, label='Perfect Prediction')
-    axes[2].set_xlabel('Actual $\dot{Q}$ (W)', fontsize=12)
-    axes[2].set_ylabel('Predicted $\dot{Q}$ (W)', fontsize=12)
+                 linewidth=2, label='Prediction')
+    axes[2].set_xlabel(f'Actual {y_label}', fontsize=12)
+    axes[2].set_ylabel(f'Predicted {y_label}', fontsize=12)
     axes[2].set_title('MAE Model: Predictions vs Actual Values', fontsize=14)
     axes[2].legend()
     axes[2].grid(True, alpha=0.3)

@@ -11,7 +11,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Change as required
-your_path = 'LinearRegression/' # Currently at root
+your_path = 'LinearRegression/'
 data_file = "window_heat.csv"
 y_label = '$\dot{Q}$ (W)'
 x_label = 'ΔT (°C)'
