@@ -40,8 +40,8 @@ DRAG_THRESHOLD = 10
 COLORS = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 
           'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
 
-# Create 4 subplots: Cl vs AoA, Cd vs AoA, Cl vs Cd, Cm vs Cl
-fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+# Create 5 subplots: Cl vs AoA, Cd vs AoA, Cl vs Cd, Cm vs Cl, L/D vs AoA
+fig, axes = plt.subplots(2, 3, figsize=(18, 10))
 
 # Process files for all plots
 for i, (data_file, label) in enumerate(FILES_ALL):
@@ -79,8 +79,18 @@ for i, (data_file, label) in enumerate(FILES_ALL):
         
         # Calculate coefficients (no filtering)
         Cl = lift / (q * S)
-        Cd = (drag / (q * S)) + 0.1  # +0.1 empirical correction for parasitic drag not captured by Unity
+        Cd_raw = drag / (q * S)
+        
+        # Simple correction: shift Cd so minimum matches AeroSandbox Cd0
+        target_Cd0 = 0.02  # From AeroSandbox analysis
+        current_min_Cd = Cd_raw.min()
+        correction = target_Cd0 - current_min_Cd
+        
+        Cd = Cd_raw + correction  # Apply correction
         Cm = moment / (q * S * CHORD)  # Moment coefficient normalized by chord
+        
+        # Calculate L/D ratio (avoid division by very small Cd)
+        LD_ratio = Cl / Cd
         
         # Filter out noisy Cm values for Cm vs Cl plot
         mask_cm = (Cm >= -0.8) & (Cm <= 0.8)
@@ -92,15 +102,38 @@ for i, (data_file, label) in enumerate(FILES_ALL):
         # Plot 1: Cl vs AoA (top-left)
         axes[0,0].scatter(aoa, Cl, alpha=0.5, s=15, c=color, label=label)
         
-        # Plot 2: Cd vs AoA (top-right)
+        # Plot 2: Cd vs AoA (top-middle)
         axes[0,1].scatter(aoa, Cd, alpha=0.5, s=15, c=color, label=label)
         
-        # Plot 3: Cl vs Cd (bottom-left)
+        # Plot 3: L/D vs AoA (top-right)
+        axes[0,2].scatter(aoa, LD_ratio, alpha=0.5, s=15, c=color, label=label)
+        
+        # Plot 4: Cl vs Cd (bottom-left)
         axes[1,0].scatter(Cd, Cl, alpha=0.7, s=30, c=color, label=label)
         
-        # Don't plot FILES_ALL in Cm vs Cl (bottom-right) - only FILES_CM_ONLY will be plotted there
+        # Don't plot FILES_ALL in Cm vs Cl (bottom-middle) - only FILES_CM_ONLY will be plotted there
         
-        print(f"{label}: {len(aoa)} data points, Cm range: [{Cm.min():.4f}, {Cm.max():.4f}]")
+        # Calculate statistics
+        # Find stall points: where Cl is min and max
+        min_Cl_idx = Cl.argmin()
+        max_Cl_idx = Cl.argmax()
+        
+        # Get data between stalls (between min and max Cl indices)
+        start_idx = min(min_Cl_idx, max_Cl_idx)
+        end_idx = max(min_Cl_idx, max_Cl_idx)
+        Cl_between_stalls = Cl[start_idx:end_idx+1]
+        mean_Cl_between_stalls = Cl_between_stalls.mean()
+        
+        max_LD = LD_ratio.max()
+        max_LD_aoa = aoa[LD_ratio.argmax()]
+        
+        print(f"{label}: {len(aoa)} data points")
+        print(f"  Cd0 from AeroSandbox: {target_Cd0:.3f}")
+        print(f"  Correction applied: {correction:+.4f} (min Cd now: {Cd.min():.4f})")
+        print(f"  Cl range: [{Cl.min():.3f}, {Cl.max():.3f}]")
+        print(f"  Mean Cl (between stalls): {mean_Cl_between_stalls:.3f}")
+        print(f"  Max L/D: {max_LD:.2f} at AoA = {max_LD_aoa:.1f}°")
+        print(f"  Cm range: [{Cm.min():.4f}, {Cm.max():.4f}]")
         
     except FileNotFoundError as e:
         print(f"Warning: {e}, skipping...")
@@ -161,7 +194,7 @@ axes[0,0].axhline(y=0, color='k', linewidth=0.5)
 axes[0,0].axvline(x=0, color='k', linewidth=0.5)
 axes[0,0].legend()
 
-# Top-right: Cd vs AoA
+# Top-middle: Cd vs AoA
 axes[0,1].set_xlabel('Angle of Attack (°)', fontsize=12)
 axes[0,1].set_ylabel('$C_D$', fontsize=12)
 axes[0,1].set_title('$C_D$ vs AoA', fontsize=12)
@@ -169,6 +202,15 @@ axes[0,1].grid(True, alpha=0.3)
 axes[0,1].axhline(y=0, color='k', linewidth=0.5)
 axes[0,1].axvline(x=0, color='k', linewidth=0.5)
 axes[0,1].legend()
+
+# Top-right: L/D vs AoA
+axes[0,2].set_xlabel('Angle of Attack (°)', fontsize=12)
+axes[0,2].set_ylabel('L/D', fontsize=12)
+axes[0,2].set_title('Lift-to-Drag Ratio vs AoA', fontsize=12)
+axes[0,2].grid(True, alpha=0.3)
+axes[0,2].axhline(y=0, color='k', linewidth=0.5)
+axes[0,2].axvline(x=0, color='k', linewidth=0.5)
+axes[0,2].legend()
 
 # Bottom-left: Drag Polar
 axes[1,0].set_xlabel('$C_D$', fontsize=12)
@@ -179,7 +221,7 @@ axes[1,0].axhline(y=0, color='k', linewidth=0.5)
 axes[1,0].axvline(x=0, color='k', linewidth=0.5)
 axes[1,0].legend()
 
-# Bottom-right: Cm vs Cl
+# Bottom-middle: Cm vs Cl
 axes[1,1].set_xlabel('$C_L$', fontsize=12)
 axes[1,1].set_ylabel('$C_m$', fontsize=12)
 axes[1,1].set_title('$C_m$ vs $C_L$', fontsize=12)
@@ -187,6 +229,9 @@ axes[1,1].grid(True, alpha=0.3)
 axes[1,1].axhline(y=0, color='k', linewidth=0.5)
 axes[1,1].axvline(x=0, color='k', linewidth=0.5)
 axes[1,1].legend()
+
+# Bottom-right: Leave empty or add another plot later
+axes[1,2].axis('off')
 
 plt.tight_layout()
 plt.savefig(OUTPUT_FILE, dpi=150, bbox_inches='tight')
