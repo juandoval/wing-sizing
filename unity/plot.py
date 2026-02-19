@@ -125,14 +125,16 @@ for i, (data_file, label) in enumerate(FILES_ALL):
         mean_Cl_between_stalls = Cl_between_stalls.mean()
         
         max_LD = LD_ratio.max()
-        max_LD_aoa = aoa[LD_ratio.argmax()]
+        max_LD_idx = LD_ratio.argmax()
+        max_LD_aoa = aoa[max_LD_idx]
+        max_LD_Cl = Cl[max_LD_idx]
         
         print(f"{label}: {len(aoa)} data points")
         print(f"  Cd0 from AeroSandbox: {target_Cd0:.3f}")
         print(f"  Correction applied: {correction:+.4f} (min Cd now: {Cd.min():.4f})")
         print(f"  Cl range: [{Cl.min():.3f}, {Cl.max():.3f}]")
         print(f"  Mean Cl (between stalls): {mean_Cl_between_stalls:.3f}")
-        print(f"  Max L/D: {max_LD:.2f} at AoA = {max_LD_aoa:.1f}°")
+        print(f"  Max L/D: {max_LD:.2f} at AoA = {max_LD_aoa:.1f}° (CL = {max_LD_Cl:.3f})")
         print(f"  Cm range: [{Cm.min():.4f}, {Cm.max():.4f}]")
         
     except FileNotFoundError as e:
