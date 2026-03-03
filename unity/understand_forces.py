@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-df = pd.read_csv('unity/liftCurve_16.txt', sep='\t')
+df = pd.read_csv('unity/glide_60.txt', sep='\t')
 df.columns = df.columns.str.strip()
 
 # Look at all the force columns available
