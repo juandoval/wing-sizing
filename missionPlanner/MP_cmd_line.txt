@@ -1,0 +1,1 @@
+--model json --home=53.43619,-2.250627,0,0 --defaults=C:\DUi\ArduPilot\parameters.param
