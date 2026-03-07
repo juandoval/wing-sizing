@@ -1,0 +1,74 @@
+PARAMETER DIFF: parameters.param vs BUSR.param
+================================================
+Format: PARAMETER | parameters.param | BUSR.param
+
+--- SERVO / AILERON (likely roll cause) ---
+SERVO1_REVERSED          | 1          | 0
+SERVO2_REVERSED          | 1          | 0
+SERVO5_FUNCTION          | 4 (aileron)| 0 (disabled)
+
+--- AHRS TRIM ---
+AHRS_TRIM_X              | -0.0237833 | 0
+AHRS_TRIM_Y              | -0.0056029 | 0
+AHRS_TRIM_Z              | 0          | 0
+
+--- AIRSPEED ---
+AIRSPEED_CRUISE          | 12         | 22
+AIRSPEED_MAX             | 22         | 30
+AIRSPEED_MIN             | 9          | 10
+ARSPD_USE                | 0          | 1
+ARSPD_TYPE               | 1          | 2
+ARSPD_PIN                | 15         | 1
+
+--- ROLL CONTROLLER ---
+RLL_RATE_P               | 0.08       | 0.3
+RLL_RATE_I               | 0.15       | 0.25
+RLL_RATE_D               | 0          | 0.01743
+RLL_RATE_FF              | 0.345      | 0.237212
+RLL2SRV_RMAX             | 0          | 90
+RLL2SRV_TCONST           | 0.5        | 0.25
+ROLL_LIMIT_DEG           | 45         | 60
+
+--- PITCH CONTROLLER ---
+PTCH_RATE_P              | 0.04       | 0.15
+PTCH_RATE_I              | 0.15       | 0.11
+PTCH_RATE_D              | 0          | 0.007265
+PTCH_RATE_FF             | 0.345      | 0.595723
+PTCH_LIM_MAX_DEG         | 20         | 25
+PTCH_LIM_MIN_DEG         | -25        | -20
+PTCH2SRV_RMAX_DN         | 0          | 90
+PTCH2SRV_RMAX_UP         | 0          | 90
+PTCH2SRV_TCONST          | 0.5        | 0.25
+TECS_PITCH_MIN           | 0          | -10
+
+--- FAILSAFES ---
+FS_GCS_ENABL             | 1          | 0
+FS_LONG_ACTN             | 1          | 0
+THR_FAILSAFE             | 0          | 1
+
+--- FLIGHT MODES ---
+FLTMODE_CH               | 5          | 8
+FLTMODE1                 | 0 (Manual) | 10 (Auto)
+FLTMODE2                 | 0 (Manual) | 11 (RTL)
+FLTMODE3                 | 5 (FBWA)   | 12 (Loiter)
+FLTMODE4                 | 5 (FBWA)   | 5 (FBWA)
+FLTMODE5                 | 5 (FBWA)   | 2 (Stabilize)
+FLTMODE6                 | 11 (RTL)   | 0 (Manual)
+
+--- NAVIGATION ---
+NAVL1_PERIOD             | 17         | 15
+WP_LOITER_RAD            | 60         | 80
+WP_RADIUS                | 90         | 50
+
+--- MISC ---
+ACRO_LOCKING             | 0          | 1
+EK2_ENABLE               | 0          | 1
+LAND_FLARE_SEC           | 2          | 3
+LAND_PITCH_DEG           | 0          | 1
+
+================================================
+TOP SUSPECTS FOR RIGHT-ROLL ON TAKEOFF:
+1. SERVO1_REVERSED = 0 in BUSR (should be 1) -- aileron is backwards
+2. SERVO5_FUNCTION = 0 in BUSR (default uses it as 2nd aileron)
+3. AHRS_TRIM_X zeroed out in BUSR (removes roll-axis IMU compensation)
+================================================
